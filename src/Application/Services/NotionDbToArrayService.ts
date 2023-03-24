@@ -58,7 +58,9 @@ export class NotionDbToArrayService {
                         }
                         break;
                     case "chainName":
-                        config.chainName = "1RPC " + value;
+                        if (value !== "" && value !== undefined && value !== null) {
+                            config.chainName = "1RPC " + value;
+                        }
                         break;
                     case "nativeCurrency":
                         if (value !== "" && value !== undefined && value !== null) {
