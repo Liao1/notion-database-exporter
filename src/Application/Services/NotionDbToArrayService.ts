@@ -4,23 +4,97 @@ import {
     RetrieveDatabaseResult
 } from "../../Domain/Infrastructure/Adapter/INotionAdapter";
 
+interface NetworkConfig {
+    id: string;
+    name: string;
+    http?: string;
+    ws?: string;
+    chainId?: number;
+    chainName?: string;
+    nativeCurrency?: {
+      name: string;
+      symbol: string;
+      decimals: number;
+    };
+    explorerUrl?: string;
+    keywords: string;
+    logo: string;
+    isTestnet?: boolean;
+  }
+
 export class NotionDbToArrayService {
     toArray(retrieveResult: RetrieveDatabaseResult, rows: Array<QueryDatabaseResultRow>): Array<Array<String>> {
         const csvRows = new Array<Array<String>>();
+        const configs = new Array<NetworkConfig>();
 
         const propNames = Object.keys(retrieveResult.properties);
-        csvRows.push(propNames);
 
         rows.forEach((row) => {
-            const csvRow = new Array<String>()
+            let config: NetworkConfig = {} as NetworkConfig;
+
             propNames.forEach((propName) => {
                 const prop = row.properties[propName];
                 const value = this.takeValueFromProp(prop);
-                csvRow.push(value)
+                switch (propName) {
+                    case "id":
+                        config.id = value;
+                        break;
+                    case "name":
+                        config.name = value;
+                        break;
+                    case "type":
+                        if (value === "http") {
+                            config.http = "1rpc.io";
+                        } else if (value === "ws") {
+                            config.ws = "wss://1rpc.io";
+                        } else if (value === "http & ws") {
+                            config.http = "1rpc.io";
+                            config.ws = "wss://1rpc.io";
+                        }
+                        break;
+                    case "chainId":
+                        if (value !== "") {
+                            config.chainId = parseInt(value);
+                        }
+                        break;
+                    case "chainName":
+                        config.chainName = "1RPC " + value;
+                        break;
+                    case "nativeCurrency":
+                        if (value !== "" && value !== undefined && value !== null) {
+                            config.nativeCurrency = {
+                                name: value,
+                                symbol: value,
+                                decimals: 18
+                            }
+                        }
+                        break;
+                    case "explorerUrl":
+                        if (value !== "" && value !== undefined && value !== null) {
+                            config.explorerUrl = value;
+                        }
+                        break;
+                    case "keywords":
+                        config.keywords = value;
+                        break;
+                    case "logo":
+                        config.logo = value;
+                        break;
+                    case "isTestnet":
+                        config.isTestnet = value === "true";
+                        break;
+                }
             })
-            csvRows.push(csvRow)
+            if (config.http !== "" && config.http !== undefined) {
+                config.http = config.http + config.id;
+            }
+            if (config.ws !== "" && config.ws !== undefined) {
+                config.ws = config.ws + config.id;
+            }
+            configs.push(config);
         })
 
+        console.log(configs);
         return csvRows;
     }
 
@@ -78,6 +152,8 @@ export class NotionDbToArrayService {
                             throw new Error(`Detect unsupported property type \"${curr["type"]}\"`)
                     }
                 }, "")
+            case "url":
+                return prop.url;
             default:
                 throw new Error(`Detect unsupported property type \"${prop["type"]}\"`)
         }

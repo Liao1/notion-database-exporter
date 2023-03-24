@@ -41,6 +41,7 @@ export type QueryDatabaseResultProps =
     | QueryDatabaseResultRollup
     | QueryDatabaseResultArray
     | QueryDatabaseResultFiles
+    | QueryDatabaseResultUrl
     ;
 
 export interface QueryDatabaseResultSelect {
@@ -97,6 +98,11 @@ export interface QueryDatabaseResultFormula {
 export interface QueryDatabaseResultNumber {
     type: "number"
     number: number
+}
+
+export interface QueryDatabaseResultUrl {
+    type: "url"
+    url: string
 }
 
 export interface QueryDatabaseResultRollup {
